@@ -15,10 +15,11 @@ class Settings:
     # SQLite database file in project root by default
     database_url: str = os.getenv("DATABASE_URL", "sqlite:///app.db")
 
-    # LLM settings
-    openai_api_key: str | None = os.getenv("OPENAI_API_KEY")
-    model_name: str = os.getenv("MODEL_NAME", "gpt-4o-mini")
+    # LLM settings (Ollama)
+    # Example model: "llama3.1:8b" or "qwen2.5:7b"
+    model_name: str = os.getenv("MODEL_NAME", "llama3.1:8b")
     temperature: float = float(os.getenv("TEMPERATURE", "0.6"))
+    ollama_base_url: str = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
 
 
 settings = Settings()

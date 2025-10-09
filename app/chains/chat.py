@@ -6,7 +6,7 @@ from langchain_core.chat_history import BaseChatMessageHistory
 from langchain_community.chat_message_histories import SQLChatMessageHistory
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_openai import ChatOpenAI
+from langchain_ollama import ChatOllama
 
 from app.utils.config import settings
 
@@ -34,17 +34,16 @@ def build_chain_with_memory(session_id: str, persona_vars: Dict[str, Any]) -> Ru
         # SQLChatMessageHistory creates a table 'message_store' in the provided DB URL by default
         return SQLChatMessageHistory(session_id=session_id, connection_string=settings.database_url)
 
-    # Lazily construct the LLM and chain so imports don't require API keys
-    if not settings.openai_api_key:
-        raise ValueError("OPENAI_API_KEY is not set. Please configure it in your environment.")
-
-    llm = ChatOpenAI(
+    # Lazily construct the LLM (local Ollama); assumes Ollama is running locally
+    llm = ChatOllama(
         model=settings.model_name,
         temperature=settings.temperature,
-        api_key=settings.openai_api_key,
+        base_url=settings.ollama_base_url,
     )
 
-    chain = prompt | llm
+    # Bind persona variables at the prompt level
+    persona_prompt = prompt.partial(**persona_vars)
+    chain = persona_prompt | llm
 
     runnable = RunnableWithMessageHistory(
         chain,
@@ -53,5 +52,5 @@ def build_chain_with_memory(session_id: str, persona_vars: Dict[str, Any]) -> Ru
         history_messages_key="history",
     )
 
-    # Bind persona variables via partials so they are available in the prompt
-    return runnable.with_config(configurable={"thread_id": session_id}).partial(**persona_vars)
+    # Attach a thread id for history scoping; callers can also pass config at invoke time
+    return runnable.with_config(configurable={"thread_id": session_id})

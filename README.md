@@ -9,10 +9,12 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-2. Configure environment:
+2. Configure environment (Ollama):
 ```bash
 cp .env.example .env
-# edit .env and set OPENAI_API_KEY
+# edit .env and set MODEL_NAME and OLLAMA_BASE_URL if needed
+# ensure Ollama is running and the model is pulled, e.g.:
+#   ollama pull llama3.1:8b
 ```
 
 3. Run the app:
@@ -59,4 +61,4 @@ curl -s "localhost:5000/api/history?session_key=alice-kai-1" | jq .
 Notes:
 - LangChain `SQLChatMessageHistory` persists messages in SQLite so each `session_key` has its own memory.
 - Persona variables (age, gender, birth country, personality, education, background) customize the companion prompt.
-- Set `MODEL_NAME` and `OPENAI_API_KEY` for your model provider.
+- Uses local Ollama via `MODEL_NAME` and `OLLAMA_BASE_URL`. Make sure the model is available in Ollama.
